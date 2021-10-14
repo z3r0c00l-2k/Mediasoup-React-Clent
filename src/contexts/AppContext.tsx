@@ -121,7 +121,6 @@ const AppContextProvider: FC = ({ children }) => {
       },
       async (response) => {
         const { producerId, id, kind, rtpParameters } = response;
-        const codecOptions = {};
         const consumer = await consumeTransportRef.current?.consume({
           id,
           producerId,

@@ -3,7 +3,7 @@ import { Device, types as mediasoupTypes } from "mediasoup-client";
 import { io, Socket } from "socket.io-client";
 import { DefaultEventsMap } from "socket.io-client/build/typed-events";
 
-const SOCKET_IO = "http://192.168.1.12:8000/";
+const SOCKET_IO = "https://4721-103-151-188-165.ngrok.io/";
 
 type ProviderProps = {
   sendSocketMessage: (

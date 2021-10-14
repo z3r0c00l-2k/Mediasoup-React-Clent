@@ -8,6 +8,8 @@ const ActionsBar = () => {
     sendSocketMessage,
     setIsWebCam,
     device,
+    onProducerTransportCreatedCallBack,
+    onSubTransportCreatedCallback,
   } = useContext(AppContext);
 
   const [isSubscribeDisabled, setIsSubscribeDisabled] = useState(false);
@@ -16,19 +18,26 @@ const ActionsBar = () => {
     setIsWebCam(isWebCam);
 
     setTimeout(() => {
-      const message = {
+      const payload = {
         type: "createProducerTransport",
         forceTcp: false,
         rtpCapabilities: device?.rtpCapabilities,
       };
-      sendSocketMessage(message);
+      sendSocketMessage(
+        "createProducerTransport",
+        payload,
+        onProducerTransportCreatedCallBack
+      );
     }, 500);
   };
 
   const onSubscribe = () => {
     setIsSubscribeDisabled(true);
-    const message = { type: "createConsumerTransport", forceTcp: false };
-    sendSocketMessage(message);
+    sendSocketMessage(
+      "createConsumerTransport",
+      { forceTcp: false },
+      onSubTransportCreatedCallback
+    );
   };
 
   return (

@@ -1,13 +1,16 @@
 import { createContext, FC, useEffect, useRef, useState } from "react";
 import { Device, types as mediasoupTypes } from "mediasoup-client";
-import { parseJson } from "../utils";
-import stream from "stream";
+import { io, Socket } from "socket.io-client";
+import { DefaultEventsMap } from "socket.io-client/build/typed-events";
 
-const SOCKET_URL = "ws://192.168.1.12:8000/ws";
+const SOCKET_IO = "http://192.168.1.12:8000/";
 
 type ProviderProps = {
-  webSocket: WebSocket | null;
-  sendSocketMessage: (message: any) => void;
+  sendSocketMessage: (
+    event: string,
+    payload: any,
+    callback?: (response: any) => void
+  ) => void;
   isScreenDisabled: boolean;
   isCameraDisabled: boolean;
   setIsWebCam: (bool: boolean) => void;
@@ -17,6 +20,8 @@ type ProviderProps = {
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
   status: string;
+  onProducerTransportCreatedCallBack: (response: any) => void;
+  onSubTransportCreatedCallback: (response: any) => void;
 };
 
 const AppContext = createContext({} as ProviderProps);
@@ -30,98 +35,57 @@ const AppContextProvider: FC = ({ children }) => {
   const [showLocalStream, setShowLocalStream] = useState(false);
   const [showRemoteStream, setShowRemoteStream] = useState(false);
 
-  const webSocketRef = useRef<WebSocket | null>(null);
+  const socketRef = useRef<Socket<DefaultEventsMap, DefaultEventsMap> | null>(
+    null
+  );
   const deviceRef = useRef<mediasoupTypes.Device | null>(null);
-  const callbackRef = useRef<any>(null);
   const producerRef = useRef<mediasoupTypes.Producer | null>(null);
   const consumeTransportRef = useRef<mediasoupTypes.Transport | null>(null);
   const isWebCamRef = useRef(true);
 
   useEffect(() => {
-    webSocketRef.current = new WebSocket(SOCKET_URL);
-    webSocketRef.current.onopen = onSocketOpen;
-    webSocketRef.current.onclose = onSocketClose;
-    webSocketRef.current.onmessage = onMessage;
+    socketRef.current = io(SOCKET_IO);
+
+    socketRef.current.on("connect", () => {
+      console.log("Connected", socketRef.current?.id);
+      onSocketOpen();
+    });
 
     return () => {
-      webSocketRef.current?.close();
+      socketRef.current?.close();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSocketOpen = () => {
     console.log({ socket: "Opened" });
-    sendSocketMessage({ type: "getRouterRtpCapabilities" });
+    sendSocketMessage("getRouterRtpCapabilities", null, (response: any) => {
+      setStatus("Ready!!!");
+      loadDevices(response);
+      setIsScreenDisabled(false);
+      setIsCameraDisabled(false);
+    });
   };
 
-  const onSocketClose = () => {
-    console.log({ socket: "Closed" });
-  };
-
-  const onMessage = (event: MessageEvent<any>) => {
-    const resp = parseJson(event.data);
-
-    if (!resp) {
-      console.error("Invalid Response Received", event);
-      return;
-    }
-
-    switch (resp.type) {
-      case "routerCapability":
-        onRouterRtpCapabilities(resp);
-        break;
-      case "producerTransportCreated":
-        onProducerTransportCreated(resp);
-        break;
-      case "producerConnected":
-        if (callbackRef.current) {
-          console.log("Peer Connected");
-          callbackRef.current();
-        }
-        break;
-      case "published":
-        if (callbackRef.current) {
-          console.log("Published");
-          callbackRef.current(resp.data.id);
-        }
-        break;
-      case "subTransportCreated":
-        onSubTransportCreated(resp);
-        break;
-      case "subConnected":
-        if (callbackRef.current) {
-          console.log("Subscribed");
-          callbackRef.current();
-        }
-        break;
-      case "resumed":
-        console.log("Resumed");
-        break;
-      case "subscribed":
-        onSubscribed(resp);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const onSubTransportCreated = (resp: any) => {
+  const onSubTransportCreatedCallback = (resp: any) => {
     if (resp.error) {
+      setStatus(resp.error);
       return console.error("Error on server", resp.error);
     }
 
-    const transport = deviceRef.current?.createRecvTransport(resp.data);
+    const transport = deviceRef.current?.createRecvTransport(resp);
 
     consumeTransportRef.current = transport || null;
 
     transport?.on("connect", ({ dtlsParameters }, callback, errback) => {
-      callbackRef.current = callback;
-      const message = {
-        type: "connectConsumerTransport",
+      const payload = {
         transportId: transport.id,
-        dtlsParameter: dtlsParameters,
+        dtlsParameters: dtlsParameters,
       };
-      sendSocketMessage(message);
+      sendSocketMessage("connectConsumerTransport", payload, (resp: any) => {
+        callback();
+        setStatus(resp.error || resp.message);
+      });
     });
 
     transport?.on(
@@ -134,8 +98,8 @@ const AppContextProvider: FC = ({ children }) => {
 
           case "connected":
             setShowRemoteStream(true);
-            sendSocketMessage({
-              type: "resume",
+            sendSocketMessage("resume", null, (response) => {
+              console.log({ response });
             });
             setStatus("Subscribed.");
             break;
@@ -150,60 +114,72 @@ const AppContextProvider: FC = ({ children }) => {
       }
     );
 
-    const message = {
-      type: "consume",
-      rtpCapabilities: deviceRef.current?.rtpCapabilities,
-    };
-    sendSocketMessage(message);
+    sendSocketMessage(
+      "consume",
+      {
+        rtpCapabilities: deviceRef.current?.rtpCapabilities,
+      },
+      async (response) => {
+        const { producerId, id, kind, rtpParameters } = response;
+        const codecOptions = {};
+        const consumer = await consumeTransportRef.current?.consume({
+          id,
+          producerId,
+          kind,
+          rtpParameters,
+        });
+
+        const stream = new MediaStream();
+        stream.addTrack(consumer!.track);
+        setRemoteStream(stream);
+      }
+    );
   };
 
-  const onSubscribed = async (resp: any) => {
-    const { producerId, id, kind, rtpParameters } = resp.data;
-    const codecOptions = {};
-    const consumer = await consumeTransportRef.current?.consume({
-      id,
-      producerId,
-      kind,
-      rtpParameters,
-    });
-
-    const stream = new MediaStream();
-    stream.addTrack(consumer!.track);
-    setRemoteStream(stream);
-  };
-
-  const onProducerTransportCreated = async (resp: any) => {
-    if (resp.error) {
-      return console.error("Error on server", resp.error);
+  const onProducerTransportCreatedCallBack = async (response: any) => {
+    if (response.error) {
+      setStatus(response.error);
+      return console.error("Error on server", response.error);
     }
 
-    const transport = deviceRef.current?.createSendTransport(resp.data);
+    const transport = deviceRef.current?.createSendTransport(response);
 
-    transport?.on("connect", ({ dtlsParameters }, callback, errback) => {
-      callbackRef.current = callback;
-      const message = {
-        type: "connectConsumerTransport",
-        transportId: transport.id,
-        dtlsParameter: dtlsParameters,
-      };
-      sendSocketMessage(message);
-    });
+    // transport?.on("connect", ({ dtlsParameters }, callback, errback) => {
+    //   callbackRef.current = callback;
+    //   const payload = {
+    //     transportId: transport.id,
+    //     dtlsParameter: dtlsParameters,
+    //   };
+    //   sendSocketMessage("connectConsumerTransport", payload);
+    // });
 
     transport?.on("connect", async ({ dtlsParameters }, callback, errback) => {
-      callbackRef.current = callback;
-      sendSocketMessage({ type: "connectProducerTransport", dtlsParameters });
+      sendSocketMessage(
+        "connectProducerTransport",
+        { dtlsParameters },
+        (resp: any) => {
+          setStatus(resp.message);
+          callback(response.id);
+        }
+      );
     });
 
     transport?.on(
       "produce",
       async ({ kind, rtpParameters }, callback, errback) => {
-        callbackRef.current = callback;
-        sendSocketMessage({
-          type: "produce",
-          transportId: transport.id,
-          kind,
-          rtpParameters,
-        });
+        sendSocketMessage(
+          "produce",
+          {
+            transportId: transport.id,
+            kind,
+            rtpParameters,
+          },
+          (resp: any) => {
+            console.log("Producer ID", resp.id);
+            // check here
+            callback(response.id);
+          }
+        );
       }
     );
 
@@ -241,17 +217,15 @@ const AppContextProvider: FC = ({ children }) => {
     }
   };
 
-  const onRouterRtpCapabilities = async (resp: any) => {
-    loadDevices(resp.data);
-    setIsScreenDisabled(false);
-    setIsCameraDisabled(false);
-  };
-
-  const sendSocketMessage = (message: any) => {
-    if (!webSocketRef.current) {
+  const sendSocketMessage = (
+    event: string,
+    payload: any,
+    callback?: (response: any) => void
+  ) => {
+    if (!socketRef.current) {
       return console.error("Socket Not Initialized");
     }
-    webSocketRef.current.send(JSON.stringify(message));
+    socketRef.current.emit(event, payload, callback);
   };
 
   const loadDevices = async (
@@ -293,7 +267,6 @@ const AppContextProvider: FC = ({ children }) => {
   return (
     <AppContext.Provider
       value={{
-        webSocket: webSocketRef.current,
         sendSocketMessage,
         isScreenDisabled,
         isCameraDisabled,
@@ -304,6 +277,8 @@ const AppContextProvider: FC = ({ children }) => {
         localStream,
         remoteStream,
         status,
+        onProducerTransportCreatedCallBack,
+        onSubTransportCreatedCallback,
       }}
     >
       {children}

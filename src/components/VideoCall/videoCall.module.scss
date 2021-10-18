@@ -1,0 +1,133 @@
+@import "../../assets/styles/configs.scss";
+
+.videoContainer {
+  background-color: $bgColorDark;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 30px;
+  border-right: 1px solid $borderColor;
+  .mainVideo {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 0;
+  }
+  .extraVideoContainer {
+    display: flex;
+    overflow-x: scroll;
+    margin-top: 30px;
+    &::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
+    .extraVideo {
+      flex: 0 0 33.333%;
+      display: flex;
+      flex-direction: column;
+      margin-right: 20px;
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
+  .videoPlayerContainer {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    border: 1px solid $borderColor;
+    background-color: $bgColor;
+    .videoPlayer {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .userDetails {
+      position: absolute;
+      left: 20px;
+      bottom: 20px;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 5px 20px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      .userName {
+        color: $textColor;
+        font-size: 12px;
+        margin-right: 10px;
+      }
+      .userStatus {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: red;
+      }
+    }
+    .micButton {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      background-color: $colorHighlight;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 5px;
+      @include hoverZoom(1.1);
+      &.muted {
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      svg {
+        width: 18px;
+        height: 18px;
+        color: $textColor;
+      }
+    }
+    .userVideoContainer {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 2;
+      width: 18%;
+      height: 20%;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid $borderColor;
+      background-color: $bgColor;
+      .userVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+    }
+  }
+}
+
+.actionContainer {
+  border-right: 1px solid $borderColor;
+  border-top: 1px solid $borderColor;
+  display: flex;
+  height: 80px;
+  align-items: center;
+  padding: 0 30px;
+  justify-content: space-between;
+  .meetingActionButton {
+    background-color: $colorHighlight;
+    color: $textColor;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 150px;
+    border-radius: 10px;
+    &.endButton {
+      background-color: $colorRed;
+    }
+    @include hoverZoom(1.05);
+  }
+}

@@ -24,7 +24,7 @@ const VideoView = () => {
     <div className="row">
       <div className="video-container">
         <video autoPlay id="remoteVideo" ref={remoteVideoRef} />
-        <video autoPlay id="localVideo" ref={localVideoRef} />
+        <video autoPlay id="localVideo" ref={localVideoRef} muted />
       </div>
     </div>
   );

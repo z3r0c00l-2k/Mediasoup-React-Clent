@@ -1,14 +1,25 @@
-import "./App.css";
-import ActionsBar from "./components/ActionsBar";
-import StatusBar from "./components/StatusBar";
-import VideoView from "./components/VideoView";
+import Header from "./components/Header";
+import ParticipantsList from "./components/ParticipantsList";
+import Sidebar from "./components/Sidebar";
+import VideoCall from "./components/VideoCall";
 
 const App = () => {
   return (
-    <div className="container">
-      <VideoView />
+    <div className="main-app-wrapper">
+      <Sidebar />
+      <div className="flex flex-col flex-grow">
+        <Header />
+        <div className="flex flex-grow">
+          <VideoCall />
+          <div className="flex-grow	flex flex-col">
+            <ParticipantsList />
+          </div>
+        </div>
+      </div>
+
+      {/* <VideoView />
       <ActionsBar />
-      <StatusBar />
+      <StatusBar /> */}
     </div>
   );
 };

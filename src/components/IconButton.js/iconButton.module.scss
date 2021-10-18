@@ -1,0 +1,24 @@
+@import "../../assets/styles/configs.scss";
+
+.iconBtnContainer {
+  border: 1px solid $iconButtonBorder;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background-color: $iconButtonBg;
+  @include hoverZoom(1.1);
+  &.iconHighlighted {
+    background-color: $colorHighlight;
+    svg {
+      color: $textColor;
+    }
+  }
+  svg {
+    color: $iconColor;
+    width: 26px;
+    height: 26px;
+  }
+}

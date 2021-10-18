@@ -1,0 +1,31 @@
+@import "../../assets/styles/configs.scss";
+
+.sidebarContainer {
+  border-right: 1px solid $borderColor;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  .appLogo {
+    width: 50px;
+    height: 50px;
+    @include hoverZoom(1.1);
+  }
+  .navMenu {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin: 80px auto;
+    .navItem {
+      margin-bottom: 40px;
+      @include hoverZoom(1.1);
+      &:last-child {
+        margin-bottom: 0;
+      }
+      svg {
+        color: $iconColor;
+        width: 28px;
+        height: 28px;
+      }
+    }
+  }
+}

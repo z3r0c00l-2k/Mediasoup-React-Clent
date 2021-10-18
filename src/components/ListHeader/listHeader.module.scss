@@ -1,0 +1,28 @@
+@import "../../assets/styles/configs.scss";
+
+.listHeader {
+  background-color: $listHeaderBg;
+  display: flex;
+  color: $sideBarTextColor;
+  padding: 0 20px;
+  align-items: center;
+  svg {
+    color: $iconColor;
+    width: 20px;
+    height: 20px;
+  }
+  .listIcon {
+    color: $iconColor;
+  }
+  .listName {
+    margin-left: 20px;
+  }
+  .expandBtn {
+    margin-left: auto;
+    padding: 10px;
+    @include hoverZoom(1.1);
+    svg {
+      color: $iconColor;
+    }
+  }
+}

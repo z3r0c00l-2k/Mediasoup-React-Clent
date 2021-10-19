@@ -21,11 +21,13 @@ const ListHeader: FC<Props> = ({
         <Icon />
       </div>
       <div className={styles.listName}>
-        {`${listName} ${listCount || ""}`.trim()}
+        {`${listName} ${listCount ? `(${listCount})` : ""}`.trim()}
       </div>
-      <div className={styles.expandBtn}>
-        <ChevronUp />
-      </div>
+      {isExpandEnabled && (
+        <div className={styles.expandBtn}>
+          <ChevronUp />
+        </div>
+      )}
     </div>
   );
 };

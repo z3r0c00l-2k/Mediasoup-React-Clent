@@ -4,7 +4,8 @@
   background-color: $listHeaderBg;
   display: flex;
   color: $sideBarTextColor;
-  padding: 0 20px;
+  height: 40px;
+  padding: 0 30px;
   align-items: center;
   svg {
     color: $iconColor;
@@ -16,6 +17,7 @@
   }
   .listName {
     margin-left: 20px;
+    font-size: 14px;
   }
   .expandBtn {
     margin-left: auto;

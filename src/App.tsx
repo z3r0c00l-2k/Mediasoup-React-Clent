@@ -1,3 +1,4 @@
+import ChatView from "./components/ChatView";
 import Header from "./components/Header";
 import ParticipantsList from "./components/ParticipantsList";
 import Sidebar from "./components/Sidebar";
@@ -13,6 +14,7 @@ const App = () => {
           <VideoCall />
           <div className="flex-grow	flex flex-col">
             <ParticipantsList />
+            <ChatView />
           </div>
         </div>
       </div>

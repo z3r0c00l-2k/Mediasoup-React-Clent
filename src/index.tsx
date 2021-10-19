@@ -4,12 +4,15 @@ import "./assets/styles/global.scss";
 import "tailwindcss/tailwind.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { MediaSoupContextProvider } from "./contexts/MediaSoupContext";
 import { AppContextProvider } from "./contexts/AppContext";
 
 ReactDOM.render(
   <React.StrictMode>
     <AppContextProvider>
-      <App />
+      <MediaSoupContextProvider>
+        <App />
+      </MediaSoupContextProvider>
     </AppContextProvider>
   </React.StrictMode>,
   document.getElementById("root")

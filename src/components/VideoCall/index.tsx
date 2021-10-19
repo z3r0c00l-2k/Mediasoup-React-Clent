@@ -10,11 +10,11 @@ const VideoCall = () => {
           <VideoPlayer isMain />
         </div>
         <div className={styles.extraVideoContainer}>
-          {[...Array(5)].map((_, index) => (
+          {/* {[...Array(5)].map((_, index) => (
             <div key={index} className={styles.extraVideo}>
               <VideoPlayer />
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
       <ActionBar />
